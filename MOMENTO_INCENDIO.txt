@@ -1,0 +1,57 @@
+// Analisis de series temporales de incendios con Earth Engine
+
+// Nos dicen que se ha producido un incendio en un punto de coordenadas
+//Latitud: 40.85884775963587
+//Longitud: -8.128888549804685
+//Nos piden que averiguemos el momento exacto en el que se ha producido el incendio
+//Nos dicen que ha ocurrido entre 2016-01-01' ,'2016-12-30
+
+
+// Acotamos un momento temporal en el que conozcamos la existencia del incendio
+var ImagenesTemporales= ee.ImageCollection ('COPERNICUS/S2')//Esta coleccion puede ser enorme
+  .filterDate ('2016-01-01' ,'2016-12-30')//Filtro con una fecha (Recordad la frecuencia) yy-mm-dd
+  .filterMetadata ('CLOUDY_PIXEL_PERCENTAGE', 'Less_Than', 20);//Filtramos por los metadatos
+
+//Me creo una variable para almacenar el punto de incendio
+var puntoincendio = ee.Geometry.Point([-8.128888549804685, 40.85884775963587]); //Long y Lat
+
+// Componemos una imagen fruto de los valores medios de todas las imagenes disponibles
+
+var Incendio = ImagenesTemporales.mean();//Combinamos una imagen con valor medio de todos los pixeles
+
+// Representamos la imagen a falso color para visualizar la zona afectada
+Map.addLayer (Incendio, {
+     max: 5000.00, 
+     min: 0.00,
+     bands: ['B4', 'B3', 'B2']}, //Imagen RGB 'B4', 'B3', 'B2' falso 'B12', 'B8', 'B4']
+     'Vista de Incendio'); 
+//Añado el punto al mapa
+Map.addLayer(puntoincendio);
+
+// Centramos la vista en el lugar de estudio
+Map.setCenter (-8.128888549804685, 40.85884775963587, 11); 
+//1. Bueno yo aquí no veo muy bien el incendio. Trabjo indices.
+
+//2. Una vegetacion sana refleja mucho en el NIR, pero cuando se quema refleja en el SWIR y absorbe en le NIR
+//por tanto puedo cambiar a ['B12', 'B8', 'B4']
+// 3. Mostramos por pantalla, una sencilla grafica temporal de los valores ofrecidos por el NIR
+//Me cojo la banda del NIR y trazo una secuencia temporal a lo largo del tiempo.
+// Incorporamos una coordenada de control y extraemos los valores de la banda NIR
+//var BANDA8= ImagenesTemporales.select ('B8');
+//print (ui.Chart.image.series (BANDA8, puntoincendio));
+//4. Fijaros que el dia 8 de abril la banda NIR dejo de reflejar
+
+//_______________________________________________________________________
+
+//4. Voy a crear una nueva variable 
+/*var momento_incendio= ee.ImageCollection ('COPERNICUS/S2')//Esta coleccion puede ser enorme
+  .filterDate ('2016-08-08' ,'2016-08-09');*/
+
+
+/*Map.addLayer (momento_incendio, {
+     max: 5000.00, 
+     min: 0.00,
+     bands: ['B12', 'B8', 'B4']}, //Imagen RGB 'B4', 'B3', 'B2'
+     'Vista de momento'); */
+
+
