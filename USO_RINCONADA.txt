@@ -1,0 +1,31 @@
+var municipio = ee.FeatureCollection('users/agronomistapolo/shapefile');
+// Declaramos tres momentos temporales para disponer de los datos necesarios
+var Tiempo1 = ee.ImageCollection ('COPERNICUS/S2')
+  .filterDate ('2017-05-01' ,'2017-05-30') // Momento temporal 1
+  .filterMetadata ('CLOUDY_PIXEL_PERCENTAGE', 'Less_Than', 20);
+var Tiempo1b = Tiempo1.reduce(ee.Reducer.median());
+
+// Calculamos el indice para cada uno de los tres momentos
+var NDVI1 = Tiempo1b.normalizedDifference (['B8_median', 'B4_median']);
+//Map.centerObject(municipio);
+//Map.addLayer(municipio,{},'Rinconada');
+
+//Para filtrar dentro de una parcela en concreto con
+var parcela = (municipio)
+.filter(ee.Filter.eq('REFCAT','41081A01500010'));
+//Vamos a hacer un corte del raster
+var corte = NDVI1.clipToCollection(parcela);
+var ColeccionPaletas = require('users/gena/packages:palettes');
+var MiPaleta = ColeccionPaletas.colorbrewer.Spectral[9];
+//Mostramos resultados
+Map.addLayer(NDVI1,{max:1.0,min:0,palette:MiPaleta},'NDVI');
+Map.addLayer(parcela,{}, 'Parcela_41081A00100001');
+Map.addLayer(corte,{max:1.0,min:0,palette:MiPaleta},'Corte_NDVI');
+Map.setCenter( -5.92669997479388,37.46685939272157,15);
+//Exportamos el corte a Drive ojo con la resolucion
+Export.image.toDrive({
+  image: corte,
+  description: 'imageToDriveExample',
+  scale: 30,
+  region: parcela
+});

@@ -1,0 +1,48 @@
+//Lo primero es llamar la coleccion de Sentinel y aplico una serie de filtros
+var imagenes_sentinel = ee.ImageCollection("COPERNICUS/S2_SR")
+  .filterDate('2020-01-01','2020-05-31')
+//print(imagenes_sentinel)
+  .filterMetadata('CLOUDY_PIXEL_PERCENTAGE','less_than',20);
+
+
+
+//Ahora creo una capa y compongo una imagen con las bandas que yo quiero
+Map.addLayer(imagenes_sentinel,{bands:['B4','B3','B2']},'Vista_Negra');
+//Al ejecutar lo anterior vemos que lo que se nos muestra es una imagen
+//totalmente negra, eso es porque los valores de reflectancia de Sentinel
+//varian entre 0 y 3000. Por tanto debemos establecer esos minimos. Orden RGB.
+Map.addLayer(imagenes_sentinel,{bands:['B4','B3','B2'],min:0,max:3000},'Color_RGB');
+//Vamos a crear una imagen en falso color, para ello vamos a utilizar la B8 del NIR y
+//la colocamos en lugar de la B4
+Map.addLayer(imagenes_sentinel,{bands:['B8','B4','B3'],min:0,max:3000},'False-Color');
+//Para realmente ver que esto de las reflectancias es asi representemos cada banda de
+//forma individual
+
+Map.addLayer(imagenes_sentinel,{bands:['B1'],min:0,max:3000},'Banda_B1');
+Map.addLayer(imagenes_sentinel,{bands:['B4'],min:0,max:3000},'Banda_B4');
+Map.addLayer(imagenes_sentinel,{bands:['B8'],min:0,max:3000},'Banda_B8');
+Map.addLayer(imagenes_sentinel,{bands:['B12'],min:0,max:3000},'Banda_B12');
+//Vamos a calcular ahora el NDVI, para ello convertimos la imagen en una sola que contine
+//todas las bandas
+var  imagen_ndvi = imagenes_sentinel.mean()
+
+
+//
+var red= imagen_ndvi.select('B4');
+var nir= imagen_ndvi.select('B8');
+var ndvi_forma_i = nir.subtract(red).divide(nir.add(red));
+
+//La segunda forma es utilizando la funcion propia de earth engine
+var ndvi_forma_ii = imagen_ndvi.normalizedDifference(['B8', 'B4']);
+//Voy a crear algunas etiquetas
+
+
+//Vista NDVI-i
+Map.addLayer(ndvi_forma_i,{max: 1.0, min: 0, palette: ['CE7E45', 'DF923D', 'F1B555', 'FCD163', '99B718', '74A901', '66A000', '529400', '3E8601',
+    '207401', '056201', '004C00', '023B01', '012E01', '011D01', '011301']},'NDVI_i');
+//Vista NDVI-ii
+Map.addLayer(ndvi_forma_ii,{max: 1.0, min: 0, palette: ['CE7E45', 'DF923D', 'F1B555', 'FCD163', '99B718', '74A901', '66A000', '529400', '3E8601',
+    '207401', '056201', '004C00', '023B01', '012E01', '011D01', '011301']},'NDVI_ii');
+//Centramos a un punto de interes con longitud y latitud
+Map.setCenter(-5.93120809534654,37.45156462946132,12);
+

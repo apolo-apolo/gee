@@ -1,0 +1,81 @@
+//Vamos a realizar una descarga masiva de im´ágenes sentinel y vamos a calcula varios indices
+var municipio = ee.FeatureCollection('users/agronomistapolo/shapefile');
+var contorno = ee.FeatureCollection('users/agronomistapolo/contornorinco');
+var ColSentinel= ee.ImageCollection ('COPERNICUS/S2_SR') // Accedemos a la coleccion de Sentinel 2
+  .filterDate ('2018-01-01', '2018-01-20') // Especifico el periodo temporal
+  .filterBounds (municipio) // Zona de interes
+  .filterMetadata ('CLOUDY_PIXEL_PERCENTAGE', 'Less_Than', 30); // Cobertura de nubes minima
+var SentinelFiltro = ee.Image(ColSentinel.median());
+var SentinelAOI = SentinelFiltro.clip (municipio);
+
+// Calculo de los indices espectrales
+var NDVI = SentinelAOI.normalizedDifference (['B8', 'B4']);
+//es un indicador numérico que utiliza las bandas espectrales roja y cercana al infrarrojo. 
+//El NDVI está altamente asociado con el contenido de vegetación
+var GNDVI = SentinelAOI.normalizedDifference (['B8', 'B3']);
+//es una versión modificada del NDVI para que sea más sensible a la variación del contenido de clorofila en el cultivo
+var NDMI = SentinelAOI.normalizedDifference (['B8', 'B11']);
+//El Índice de Diferencia Normalizada de Humedad (NDMI) se utiliza para determinar 
+//el contenido de agua de la vegetación
+var NBRI = SentinelAOI.normalizedDifference (['B8', 'B12']);
+//El Índice de Calcinación Normalizado (NBRI) aprovecha las bandas espectrales de infrarrojo cercano e infrarrojo de onda corta, que son sensibles a los cambios en la vegetación,
+//para detectar áreas quemadas y monitorear la recuperación del ecosistema 
+var NDWI = SentinelAOI.normalizedDifference (['B3', 'B8']);
+//El Índice Diferencial de Agua Normalizado (NDWI) se utiliza para el análisis de masas de agua.
+var NDSI = SentinelAOI.normalizedDifference (['B3', 'B11']);
+//El Índice Diferencial Normalizado de Nieve (NDSI) es un indicador numérico que muestra la cobertura de nieve en áreas terrestres.
+var NDGI = SentinelAOI.normalizedDifference (['B3', 'B4']);
+//El Índice Glaciar Diferencial Normalizado (NDGI) se utiliza para ayudar a detectar 
+//y monitorear glaciares utilizando las bandas espectrales verde y roja.
+
+// Representacion de los indices de vegetacion
+Map.addLayer (NDGI, {max: 1.0, min: 0, palette: ['0602ff', '235cb1', '307ef3', '269db1', '30c8e2', '32d3ef', '3ae237', 'b5e22e', 'd6e21f',
+    'fff705', 'ffd611', 'ffb613', 'ff8b13', 'ff6e08', 'ff500d', 'ff0000', 'de0101', 'c21301']},'NDGI');
+Map.addLayer (GNDVI, {max: 1.0, min: 0, palette: ['0602ff', '307ef3', '30c8e2', '3ae237', 'd6e21f',
+    'ffd611', 'ff8b13', 'ff500d', 'ff0000', 'de0101', 'c21301']},'GNDVI');
+Map.addLayer (NDMI, {max: 1.0, min: 0, palette: ['#7F0010', '#D99143', '#C04529', '#E02E20', '#EC6521', '#F6D53B']},'NDMI');
+Map.addLayer (NBRI, {max: 1.0, min: 0, palette: ['011301', '011D01', '012E01', '023B01', '004C00', '056201',
+        '207401', '3E8601', '529400', '74A901', '99B718', 'FCD163', 'F1B555', 'DF923D', 'CE7E45', '66A000']},'NDWI');
+Map.addLayer (NDSI, {max: 1.0, min: 0, palette: ['#7F0010', '#D99143', '#C04529', '#E02E20', '#EC6521', '#F6D53B']},'NDSI');
+Map.addLayer (NDWI, {max: 1.0, min: 0, palette: ['0602ff', '307ef3', '30c8e2', '3ae237', 'd6e21f',
+    'ffd611', 'ff8b13', 'ff500d', 'ff0000', 'de0101', 'c21301']},'NDWI');
+Map.addLayer (NDVI, {max: 1.0, min: 0, palette: ['CE7E45', 'DF923D', 'F1B555', 'FCD163', '99B718', '74A901', '66A000', '529400', '3E8601',
+    '207401', '056201', '004C00', '023B01', '012E01', '011D01', '011301']},'NDVI');
+
+
+// Representacion de imagenes RGB y falso color
+Map.addLayer (SentinelAOI, {max: 5000.0, min: 0.0, gamma: 1.0, bands: ['B4','B8','B2']}, 'Sedimentos');
+Map.addLayer (SentinelAOI, {max: 5000.0, min: 0.0, gamma: 1.0, bands: ['B12','B4','B2']}, 'Geologi­a');
+Map.addLayer (SentinelAOI, {max: 5000.0, min: 0.0, gamma: 1.0, bands: ['B12','B8','B4']}, 'Vegetacion-SWIR');
+Map.addLayer (SentinelAOI, {max: 5000.0, min: 0.0, gamma: 1.0, bands: ['B8A','B11','B4']}, 'Suelo-Agua');
+Map.addLayer (SentinelAOI, {max: 5000.0, min: 0.0, gamma: 1.0, bands: ['B12','B11','B4']}, 'Falso color - anÃ¡lisis urbanos');
+Map.addLayer (SentinelAOI, {max: 5000.0, min: 0.0, gamma: 1.0, bands: ['B11','B8','B2']}, 'Agricultura');
+Map.addLayer (SentinelAOI, {max: 5000.0, min: 0.0, gamma: 1.0, bands: ['B11','B8','B4']}, 'AnÃ¡lisis de vegetaciÃ³n');
+Map.addLayer (SentinelAOI, {max: 5000.0, min: 0.0, gamma: 1.0, bands: ['B8','B11','B2']}, 'AnÃ¡lisis de vegetaciÃ³n sana');
+Map.addLayer (SentinelAOI, {max: 5000.0, min: 0.0, gamma: 1.0, bands: ['B8','B4','B3']}, 'Falso color');
+Map.addLayer (SentinelAOI, {max: 5000.0, min: 0.0, gamma: 1.0, bands: ['B4','B3','B2']}, 'Color natural');
+//Añadir la 
+Map.addLayer(municipio)
+
+// Guardamos los resultados en Google Drive
+//Export.image.toDrive({image: NDSI, description: 'NDSI', scale: 10, region: contorno}); // Scale: 10 (10 metros de resoluciÃ³n)
+//Export.image.toDrive({image: NDGI, description: 'NDGI', scale: 10, region: contorno});
+//Export.image.toDrive({image: GNDVI, description: 'GNDVI', scale: 10, region: contorno});
+//Export.image.toDrive({image: NDMI, description: 'NDMI', scale: 10, region: contorno});
+//Export.image.toDrive({image: NBRI, description: 'NBRI', scale: 10, region: contorno});
+//Export.image.toDrive({image: NDWI, description: 'NDWI', scale: 10, region: contorno});
+//Ojo a la hora de querer realizar los cortes, mejor utilizar el contorno puro del municipio
+Export.image.toDrive({image: NDVI, description: 'NDVI_CONTORNO_RINCO', scale: 10, region: contorno});
+//Export.image.toDrive({image: SentinelAOI.select("B12", "B4", "B2"), description: 'Geologia', scale: 10, region: contorno});
+//Export.image.toDrive({image: SentinelAOI.select("B4", "B8", "B2"), description: 'Sedimentos', scale: 10, region: contorno});
+//Export.image.toDrive({image: SentinelAOI.select("B11", "B8", "B4"), description: 'Analisis_vegetacion', scale: 10, region: contorno});
+//Export.image.toDrive({image: SentinelAOI.select("B8", "B11", "B2"), description: 'Analisis_vegetacion_sana', scale: 10, region: contorno});
+//Export.image.toDrive({image: SentinelAOI.select("B8A", "B11", "B4"), description: 'Suelo_Agua', scale: 10, region: contorno});
+//Export.image.toDrive({image: SentinelAOI.select("B12", "B8", "B4"), description: 'Vegetacion_SWIR', scale: 10, region: contorno});
+//Export.image.toDrive({image: SentinelAOI.select("B11", "B8", "B2"), description: 'Agricultura', scale: 10, region: contorno});
+//Export.image.toDrive({image: SentinelAOI.select("B12", "B11", "B4"), description: 'Analisis_urbanos', scale: 10, region: contorno});
+//Export.image.toDrive({image: SentinelAOI.select("B8", "B4", "B3"), description: 'Falso_color', scale: 10, region: contorno});
+//Export.image.toDrive({image: SentinelAOI.select("B4", "B3", "B2"), description: 'Color_natural', scale: 10, region: contorno});
+
+// Centrado de la zona AOI en la vista de trabajo
+Map.setCenter (-5.92669997479388,37.46685939272157,11);

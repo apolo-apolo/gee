@@ -1,0 +1,30 @@
+
+
+var Sentinel = ee.ImageCollection('COPERNICUS/S2')
+.filterDate('2018-10-01','2018-12-30')
+.filterMetadata ('CLOUDY_PIXEL_PERCENTAGE', 'Less_Than',10)
+//Incorporamos al visor de Sentinel una 
+//primera imagen de base sobre la que comenzaremos a montar el efecto swipe.
+Map.addLayer(Sentinel, {bands:['B11', 'B8', 'B2'],
+ gamma:1, 
+ min:0,
+ max:4000,},
+ 'Agriucltura');
+ //Continuamos montando la siguiente imagen que será superpuesta a la primera.
+var MapasVinculados = ui.Map();
+  MapasVinculados.addLayer(Sentinel, {bands:['B8', 'B4', 'B3'],
+    gamma:1,
+    min:0,
+    max: 5000},
+    'Falsocolor');
+var SWIPE = ui.Map.Linker ([ui.root.widgets().get(0), MapasVinculados])
+var SWIPE2 = ui.SplitPanel({
+  firstPanel:SWIPE.get(0),
+  secondPanel:SWIPE.get(1),
+  orientation: 'horizontal',
+  wipe:true,
+  style:{stretch: 'both'}});
+ui.root.widgets().reset([SWIPE2]);
+
+MapasVinculados.setCenter(-5.9417,37.4833,13)
+Map.setCenter(-5.9417,37.4833,13)

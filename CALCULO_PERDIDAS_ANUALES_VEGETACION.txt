@@ -1,0 +1,59 @@
+
+//treecover2000: porcentaje de cubierta forestal en 2000
+//lossyear: teselas de pérdidas de cubertura forestal por anualidad (2000 y 2019)
+//lossyear: teselas de pérdidas de cubertura forestal entre 2000 y 2019
+//gain: teselas de ganancia de cobertura forestal entre 2000 y 2012
+var Deforestacion = ee.Image("UMD/hansen/global_forest_change_2018_v1_6");
+var PerdidasAnuales = Deforestacion.select('lossyear'); // Seleccion de la banda de perdidas anuales de masa forestal
+var Perdida = Deforestacion.select('loss'); // Seleccion de la banda de perdida de masa forestal
+var Ganancia = Deforestacion.select('gain'); // Seleccion de la banda de ganancia de masa forestal
+
+// Calculo del NDVI inicial y final
+var NDVI2000 = Deforestacion.normalizedDifference (['first_b40','first_b30']);
+var NDVI2018 = Deforestacion.normalizedDifference (['last_b40','last_b30']);
+
+// Calculo del NDVI para 2017, 2016 y 2015 bajo colecciones anteriores
+var Deforestacion2017 = ee.Image("UMD/hansen/global_forest_change_2017_v1_5");
+var Deforestacion2016 = ee.Image("UMD/hansen/global_forest_change_2016_v1_4");
+var Deforestacion2015 = ee.Image("UMD/hansen/global_forest_change_2015_v1_3");
+var NDVI2017 = Deforestacion2017.normalizedDifference (['last_b40','last_b30']);
+var NDVI2016 = Deforestacion2016.normalizedDifference (['last_b40','last_b30']);
+var NDVI2015 = Deforestacion2015.normalizedDifference (['last_b40','last_b30']);
+
+// RepresentaciÃ³n de los indices de vegetacion NDVI temporales
+Map.addLayer (NDVI2000,{min: 0.0, max: 1.0,
+    palette: ['155de3','fcd163','bdd218','99b718','66a000','3e8601','207401','056201','004c00','022f02']},
+    'NDVI - 2000',0);
+Map.addLayer (NDVI2015,{min: 0.0, max: 1.0,
+    palette: ['155de3','fcd163','bdd218','99b718','66a000','3e8601','207401','056201','004c00','022f02']},
+    'NDVI - 2015',0);
+Map.addLayer (NDVI2016,{min: 0.0, max: 1.0,
+    palette: ['155de3','fcd163','bdd218','99b718','66a000','3e8601','207401','056201','004c00','022f02']},
+    'NDVI - 2016',0);
+Map.addLayer (NDVI2017,{min: 0.0, max: 1.0,
+    palette: ['155de3','fcd163','bdd218','99b718','66a000','3e8601','207401','056201','004c00','022f02']},
+    'NDVI - 2017',0);
+Map.addLayer (NDVI2018,{min: 0.0, max: 1.0,
+    palette: ['155de3','fcd163','bdd218','99b718','66a000','3e8601','207401','056201','004c00','022f02']},
+    'NDVI - 2018',0);
+
+// Representacion de valores de ganancia y perdidas de masa forestal
+
+Map.addLayer (Ganancia,{min: 0.0, max: 1.0, // 2 clases, ganancia y no ganancia
+    palette: ['000000', '22b219']},
+    'Mapa de ganancias 2000-2012',0);
+ //La clasificación de valores para el mapa de pérdidas por anualidad presenta un valor 
+ //ascendente 0-18 
+ //proporcional a la pérdida detectada en cada año de la secuencia temporal.
+Map.addLayer (Perdida,{min: 0.0, max: 1.0, // 2 clases, perdida y no perdida
+    palette: ['000000', 'ff0000']},
+    'Mapa de perdidas 2000-2018',0);
+// La clasificación de valores para el mapa de pérdidas por anualidad presenta 
+//un valor ascendente 0-18 proporcional a la pérdida detectada 
+//en cada año de la secuencia temporal.
+Map.addLayer (PerdidasAnuales,{min: 0.0, max: 18.0, // 18 clases, una por cambio anual
+    palette: ['#000000', 'fcd163','bdd218', '99b718', '66a000', '3e8601', '207401', '056201', '004c00', '022f02']},
+    'Mapa de perdidas anuales 2000-2018',1); // Capa visible
+
+// Centrado en zona AOI
+Map.setCenter (-62.98, 8.78, 11);

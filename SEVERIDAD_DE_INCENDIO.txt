@@ -1,0 +1,58 @@
+
+
+// LLamamos a la imagen satélite específica añadiendo su ID de la colección de imágenes
+var PostIncendio = ee.Image ('COPERNICUS/S2/20190630T105039_20190630T105035_T31TBF');
+
+//Añadimos la imagen a la vista haciendo una composición de colores en el SWIR/NIR y asignamos un nombre de etiqueta en la vista
+Map.addLayer (PostIncendio, {
+     max: 4000.0, 
+     min: 0.0,
+     gamma: 0.5, 
+     bands: ['B11','B8','B4']}, 
+     'PostIncendio');
+
+// Calculamos el índice NBR para el momento jugando con las bandas NIR y SWIR y lo representamos en el visor
+var NBRPostIncendio= PostIncendio.normalizedDifference (['B8','B12']) ; 
+Map.addLayer (NBRPostIncendio,{
+    max: 1.0,
+    min: 0.0,
+    'palette': ['#7F0010', '#D99143', '#C04529', '#E02E20', '#EC6521', '#F6D53B']},
+    'Mapa NBR PostIncendio');
+
+// Repetimos el proceso con una imagen previa al incendio
+var PreIncendio = ee.Image ('COPERNICUS/S2/20190610T105039_20190610T105331_T30TYL');
+Map.addLayer (PreIncendio, {
+     max: 4000.0, 
+     min: 0.0,
+     gamma: 0.5, 
+     bands: ['B11','B8','B4']}, 
+     'PreIncendio');
+var NBRPreIncendio= PreIncendio.normalizedDifference (['B8','B12']) ; 
+Map.addLayer (NBRPreIncendio,{
+    max: 1.0,
+    min: 0.0,
+    'palette': ['#7F0010', '#D99143', '#C04529', '#E02E20', '#EC6521', '#F6D53B']},
+    'Mapa NBR PreIncendio');
+//NBR <-0,25: Alto crecimiento de vegetación posterior al fuego.
+//NBR -0,25 – -0,1: Bajo crecimiento de vegetación posterior al fuego.
+//NBR -0,1 – 0,1: Zonas estables o sin quemar.
+//NBR 0,1 – 0,27: Zonas quemadas con gravedad baja.
+//NBR 0,27 – 0,44: Zonas quemadas con gravedad moderada-baja.
+//NBR 0,44 – 0,66: Zonas quemadas con gravedad moderada-alta.
+//NBR > 0,66: Zonas quemadas con gravedad alta.
+
+// Analizamos la severidad con una diferencia entre imágenes y representamos los datos en en el visor
+//Fijaros que luego podemos incluso calcular el are
+//A medida que, en esta diferencia de momentos temporales, nuestro indicador adquiera un valor positivo 
+//más elevado, indicará una zona territorial más afectada por el incendio
+var IndiceSeveridad = NBRPreIncendio.subtract(NBRPostIncendio);
+Map.addLayer (IndiceSeveridad,{
+    max: 1.0,
+    min: 0.0,
+    'palette': ['011301', '011D01', '012E01', '023B01', '004C00', '056201',
+        '207401', '3E8601', '529400', '74A901', '99B718', 'FCD163',
+        'F1B555', 'DF923D', 'CE7E45', '66A000']},
+    'Índice severidad de incendio');
+
+// Centramos el resultado del índice de severidad en la vista con un zoom, por ejemplo, de 9
+Map.centerObject (IndiceSeveridad, 9); 
