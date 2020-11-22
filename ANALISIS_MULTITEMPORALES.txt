@@ -2,17 +2,17 @@
 
 // Declaramos tres momentos temporales para disponer de los datos necesarios
 var Tiempo1 = ee.ImageCollection ('COPERNICUS/S2')
-  .filterDate ('2017-05-01' ,'2017-05-30') // Momento temporal 1
+  .filterDate ('2019-03-21' ,'2019-06-21') // Momento temporal 1
   .filterMetadata ('CLOUDY_PIXEL_PERCENTAGE', 'Less_Than', 20);
-var Tiempo1b = Tiempo1.reduce(ee.Reducer.median());
+var Tiempo1b = Tiempo1.reduce(ee.Reducer.median());//Primavera
 
 var Tiempo2 = ee.ImageCollection ('COPERNICUS/S2')
-  .filterDate ('2018-05-01' ,'2018-05-30') // Momento temporal 2
+  .filterDate ('2019-06-22' ,'2019-09-23') // Momento temporal 2 (primavera)
   .filterMetadata ('CLOUDY_PIXEL_PERCENTAGE', 'Less_Than', 20);
 var Tiempo2b = Tiempo2.reduce(ee.Reducer.median());
 
 var Tiempo3 = ee.ImageCollection ('COPERNICUS/S2')
-  .filterDate ('2019-05-01' ,'2019-05-30') // Momento temporal 3
+  .filterDate ('2019-09-21' ,'2019-12-22') // Momento temporal 3 (Otoño)
   .filterMetadata ('CLOUDY_PIXEL_PERCENTAGE', 'Less_Than', 20);
 var Tiempo3b = Tiempo3.reduce(ee.Reducer.median());
 
@@ -36,3 +36,44 @@ Map.addLayer (NDVI1, {max: 1.0, min: 0, palette: ['CE7E45', 'DF923D', 'F1B555', 
 Map.addLayer (NDVImultitemporal, {max: 0.7, min: 0.1, gamma: 1.0,}, 'NDVI multitemporal');
 //Map.setCenter (33.844,46.679, 11); Zona de Ucrania se ven cosas interesantes
 Map.setCenter(-6.004665,37.3853056,11); //Sevilla
+
+
+
+var Etiquetas = [
+  't1:+ - t2:0 - t3:0', //Rojo
+  't1:+ - t2:+ - t3:0', //Amarillo
+  't1:+ - t2:+ - t3:+', //Gris
+  't1:0 - t2:+ - t3:+', //Azul claro
+  't1:0 - t2:0 - t3:+', //Azul oscuros
+  't1:0 - t2:0 - t3:0', //Negro
+  't1:+ - t2:0 - t3:+',//Purple
+  't1:0 - t2:+ - t3:0',];//Verde
+
+
+// Configuracion del titulo y posicion de la leyenda
+var Titulo = ui.Label({
+  value: 'Mapa Multitemporal', // Titulo de la leyenda
+  style: {fontWeight: 'bold', fontSize: '20px', margin: '0px 0px 15px 0px',}}); // Estilo y dimensiones
+var Leyenda = ui.Panel({
+  style: {position: 'bottom-left', padding: '10px 20px'}}); // Posicion, altura y anchura
+Leyenda.add(Titulo);
+
+// Configuracion de la simbologia
+var Simbologia = ['d60000', 'FCFF33', 'ACACA9', '24F5E5', '2450F5', '06070A', 'F00FC4','2DF626'];
+var Simbolos = function(simbolo, texto) {
+var TextoLeyenda = ui.Label({
+  value: texto,
+  style: {margin: '6px 0px 10px 15px'}}); // Posicion en la separacion de los textos
+var CajaLeyenda = ui.Label({
+  style: {backgroundColor: '#' + simbolo,
+  padding: '15px', // TamaÃ±o del simbolo
+  margin: '0px 0px 6px 0px'}}); // Posicion en la separacion de los simbolos
+
+//Representacion de leyenda en el visor
+return ui.Panel({
+  widgets: [CajaLeyenda, TextoLeyenda],
+  layout: ui.Panel.Layout.Flow('horizontal')});};
+for (var i = 0; i < 8; i++) {Leyenda.add(Simbolos(Simbologia[i], Etiquetas[i]));} 
+
+
+Map.add(Leyenda);
